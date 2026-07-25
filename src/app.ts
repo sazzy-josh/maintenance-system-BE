@@ -27,8 +27,17 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }))
 
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map(o => o.trim().replace(/\/$/, ''))
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow server-to-server / curl (no Origin header)
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin.replace(/\/$/, ''))) return callback(null, true)
+    callback(new Error(`CORS: origin '${origin}' not allowed`))
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
