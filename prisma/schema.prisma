@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  REQUESTER
+  OFFICER
+  ADMIN
+}
+
+enum RequestStatus {
+  SUBMITTED
+  ASSIGNED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CLOSED
+  REJECTED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AssignmentStatus {
+  ACTIVE
+  REASSIGNED
+  COMPLETED
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        RoleName @unique
+  description String
+  users       User[]
+  createdAt   DateTime @default(now())
+}
+
+model User {
+  id               String    @id @default(uuid())
+  fullName         String
+  email            String    @unique
+  matricOrStaffId  String    @unique
+  phone            String?
+  department       String?
+  passwordHash     String
+  roleId           String
+  role             Role      @relation(fields: [roleId], references: [id])
+  specialization   String?
+  isActive         Boolean   @default(true)
+  lastLoginAt      DateTime?
+  refreshTokenHash String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  requests             ServiceRequest[] @relation("Requester")
+  assignmentsAsOfficer Assignment[]     @relation("Officer")
+  assignmentsMade      Assignment[]     @relation("AssignedBy")
+  statusUpdates        StatusUpdate[]
+  comments             Comment[]
+  auditLogs            AuditLog[]
+  notifications        Notification[]
+
+  @@index([roleId])
+  @@index([email])
+}
+
+model RequestCategory {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  description String
+  slaHours    Int              @default(48)
+  isActive    Boolean          @default(true)
+  requests    ServiceRequest[]
+}
+
+model ServiceRequest {
+  id           String          @id @default(uuid())
+  referenceNo  String          @unique
+  title        String
+  description  String          @db.Text
+  location     String
+  roomNumber   String?
+  categoryId   String
+  category     RequestCategory @relation(fields: [categoryId], references: [id])
+  requesterId  String
+  requester    User            @relation("Requester", fields: [requesterId], references: [id])
+  status       RequestStatus   @default(SUBMITTED)
+  priority     Priority        @default(MEDIUM)
+  dueAt        DateTime?
+  resolvedAt   DateTime?
+  closedAt     DateTime?
+  rating       Int?
+  feedback     String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  assignments   Assignment[]
+  statusUpdates StatusUpdate[]
+  attachments   Attachment[]
+  comments      Comment[]
+
+  @@index([status])
+  @@index([requesterId])
+  @@index([categoryId])
+  @@index([createdAt])
+}
+
+model Assignment {
+  id           String           @id @default(uuid())
+  requestId    String
+  request      ServiceRequest   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  officerId    String
+  officer      User             @relation("Officer", fields: [officerId], references: [id])
+  assignedById String
+  assignedBy   User             @relation("AssignedBy", fields: [assignedById], references: [id])
+  status       AssignmentStatus @default(ACTIVE)
+  note         String?
+  assignedAt   DateTime         @default(now())
+  completedAt  DateTime?
+
+  @@index([officerId, status])
+  @@unique([requestId, officerId, assignedAt])
+}
+
+model StatusUpdate {
+  id         String         @id @default(uuid())
+  requestId  String
+  request    ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  fromStatus RequestStatus?
+  toStatus   RequestStatus
+  note       String?
+  actorId    String
+  actor      User           @relation(fields: [actorId], references: [id])
+  createdAt  DateTime       @default(now())
+
+  @@index([requestId, createdAt])
+}
+
+model Attachment {
+  id           String         @id @default(uuid())
+  requestId    String
+  request      ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  url          String
+  publicId     String
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  kind         String         @default("EVIDENCE")
+  uploadedById String
+  createdAt    DateTime       @default(now())
+}
+
+model Comment {
+  id         String         @id @default(uuid())
+  requestId  String
+  request    ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User           @relation(fields: [authorId], references: [id])
+  body       String         @db.Text
+  isInternal Boolean        @default(false)
+  createdAt  DateTime       @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
