@@ -1,0 +1,20 @@
+export declare const env: {
+    NODE_ENV: "production" | "development" | "test";
+    JWT_SECRET: string;
+    JWT_EXPIRES_IN: string;
+    JWT_REFRESH_SECRET: string;
+    JWT_REFRESH_EXPIRES_IN: string;
+    CLIENT_URL: string;
+    RATE_LIMIT_WINDOW_MS: string;
+    RATE_LIMIT_MAX: string;
+    PORT: string;
+    DATABASE_URL: string;
+    SMTP_HOST?: string | undefined;
+    SMTP_PORT?: string | undefined;
+    SMTP_USER?: string | undefined;
+    SMTP_PASS?: string | undefined;
+    MAIL_FROM?: string | undefined;
+    CLOUDINARY_CLOUD_NAME?: string | undefined;
+    CLOUDINARY_API_KEY?: string | undefined;
+    CLOUDINARY_API_SECRET?: string | undefined;
+};

@@ -1,0 +1,80 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.changeStatus = exports.changeRole = exports.updateUser = exports.createUser = exports.getUser = exports.getOfficers = exports.listUsers = void 0;
+const usersService = __importStar(require("./users.service"));
+const asyncHandler_1 = require("../../utils/asyncHandler");
+const response_1 = require("../../utils/response");
+const AppError_1 = require("../../utils/AppError");
+const auditLogger_1 = require("../../middleware/auditLogger");
+exports.listUsers = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+    const { data, meta } = await usersService.listUsers(req.query);
+    return (0, response_1.success)(res, data, 'Users retrieved', 200, meta);
+});
+exports.getOfficers = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+    const officers = await usersService.getOfficers();
+    return (0, response_1.success)(res, officers);
+});
+exports.getUser = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+    if (req.user.role !== 'ADMIN' && req.user.id !== req.params.id) {
+        throw new AppError_1.AppError(403, 'Insufficient permissions', 'FORBIDDEN');
+    }
+    const user = await usersService.getUser(req.params.id);
+    return (0, response_1.success)(res, user);
+});
+exports.createUser = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+    const user = await usersService.createUser(req.body);
+    await (0, auditLogger_1.auditLog)(req.user.id, 'USER_CREATED', 'User', user.id, { role: user.role }, req);
+    return (0, response_1.created)(res, user, 'User created successfully');
+});
+exports.updateUser = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+    if (req.user.role !== 'ADMIN' && req.user.id !== req.params.id) {
+        throw new AppError_1.AppError(403, 'Insufficient permissions', 'FORBIDDEN');
+    }
+    const user = await usersService.updateUser(req.params.id, req.body);
+    return (0, response_1.success)(res, user, 'User updated');
+});
+exports.changeRole = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+    await usersService.changeRole(req.params.id, req.body.role, req.body.specialization);
+    await (0, auditLogger_1.auditLog)(req.user.id, 'USER_ROLE_CHANGED', 'User', req.params.id, { role: req.body.role }, req);
+    return (0, response_1.success)(res, null, 'Role updated');
+});
+exports.changeStatus = (0, asyncHandler_1.asyncHandler)(async (req, res) => {
+    const { isActive } = req.body;
+    await usersService.changeStatus(req.params.id, req.user.id, isActive);
+    await (0, auditLogger_1.auditLog)(req.user.id, isActive ? 'USER_ACTIVATED' : 'USER_DEACTIVATED', 'User', req.params.id, {}, req);
+    return (0, response_1.success)(res, null, `User ${isActive ? 'activated' : 'deactivated'}`);
+});
+//# sourceMappingURL=users.controller.js.map

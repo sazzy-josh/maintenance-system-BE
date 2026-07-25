@@ -1,0 +1,11 @@
+import { Request, Response } from 'express';
+export declare const createRequest: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const listRequests: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const getStats: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const getRequest: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const updateRequest: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const transitionStatus: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const setPriority: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const addAttachments: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const deleteAttachment: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const rateRequest: (req: Request, res: Response, next: import("express").NextFunction) => void;
