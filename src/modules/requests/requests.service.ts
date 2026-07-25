@@ -62,6 +62,7 @@ export const createRequest = async (
     location: string
     roomNumber?: string
     description: string
+    priority?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   },
   files: Express.Multer.File[],
   req: ExpressRequest
@@ -90,6 +91,7 @@ export const createRequest = async (
       description: data.description,
       requesterId,
       dueAt,
+      ...(data.priority && { priority: data.priority }),
     },
     include: { category: true, requester: true },
   })

@@ -6,6 +6,7 @@ export const createRequestSchema = z.object({
   location: z.string().min(2).max(200),
   roomNumber: z.string().optional(),
   description: z.string().min(20).max(5000),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
 })
 
 export const updateRequestSchema = z.object({

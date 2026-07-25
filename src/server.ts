@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import http from 'http'
+import bcrypt from 'bcryptjs'
 import app from './app'
 import { initSocket } from './sockets/socket'
 import { prisma } from './config/db'
@@ -29,6 +30,31 @@ async function bootstrap() {
   ]
   for (const cat of categories) {
     await prisma.requestCategory.upsert({ where: { name: cat.name }, update: {}, create: { ...cat, isActive: true } })
+  }
+
+  // Seed initial admin user if env vars are provided
+  const adminEmail    = process.env.ADMIN_EMAIL
+  const adminPassword = process.env.ADMIN_PASSWORD
+  const adminName     = process.env.ADMIN_NAME || 'System Admin'
+  if (adminEmail && adminPassword) {
+    const adminRole = await prisma.role.findUnique({ where: { name: 'ADMIN' } })
+    if (adminRole) {
+      const existing = await prisma.user.findUnique({ where: { email: adminEmail } })
+      if (!existing) {
+        const hash = await bcrypt.hash(adminPassword, 12)
+        await prisma.user.create({
+          data: {
+            email: adminEmail,
+            fullName: adminName,
+            matricOrStaffId: 'ADMIN001',
+            passwordHash: hash,
+            roleId: adminRole.id,
+            isActive: true,
+          },
+        })
+        console.log(`✓ Admin user created: ${adminEmail}`)
+      }
+    }
   }
 
   console.log('✓ Bootstrap complete')
