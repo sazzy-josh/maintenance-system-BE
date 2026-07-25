@@ -18,6 +18,7 @@ import assignmentRoutes from './modules/assignments/assignments.routes'
 import notificationRoutes from './modules/notifications/notifications.routes'
 import reportRoutes from './modules/reports/reports.routes'
 import auditRoutes from './modules/audit/audit.routes'
+import setupRoutes from './modules/setup/setup.routes'
 
 const app = express()
 
@@ -85,6 +86,7 @@ app.use('/api/v1/assignments', assignmentRoutes)
 app.use('/api/v1/notifications', notificationRoutes)
 app.use('/api/v1/reports', reportRoutes)
 app.use('/api/v1/audit', auditRoutes)
+app.use('/api/v1/setup', setupRoutes)
 
 // 404
 app.use((_req, res) => {
