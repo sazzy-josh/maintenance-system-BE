@@ -82,21 +82,20 @@ export const assignRequest = async (
     },
   })
 
-  try {
-    await sendMail(
-      officer.email,
-      `New Job Assigned – ${request.referenceNo}`,
-      emailTemplates.officerAssigned(request.referenceNo, request.title, data.note)
-    )
-    const requester = await prisma.user.findUnique({ where: { id: request.requesterId } })
+  sendMail(
+    officer.email,
+    `New Job Assigned – ${request.referenceNo}`,
+    emailTemplates.officerAssigned(request.referenceNo, request.title, data.note)
+  ).catch(() => {})
+  prisma.user.findUnique({ where: { id: request.requesterId } }).then((requester) => {
     if (requester) {
-      await sendMail(
+      sendMail(
         requester.email,
         `Request Assigned – ${request.referenceNo}`,
         emailTemplates.requestAssigned(request.referenceNo, officer.fullName)
-      )
+      ).catch(() => {})
     }
-  } catch {}
+  }).catch(() => {})
 
   return assignment
 }

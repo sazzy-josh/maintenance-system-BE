@@ -146,13 +146,11 @@ export const createRequest = async (
 
   emitToRole('ADMIN', 'request:created', { id: serviceRequest.id, referenceNo })
 
-  try {
-    await sendMail(
-      serviceRequest.requester.email,
-      `Request Submitted – ${referenceNo}`,
-      emailTemplates.requestSubmitted(referenceNo, serviceRequest.title)
-    )
-  } catch {}
+  sendMail(
+    serviceRequest.requester.email,
+    `Request Submitted – ${referenceNo}`,
+    emailTemplates.requestSubmitted(referenceNo, serviceRequest.title)
+  ).catch(() => {})
 
   return serviceRequest
 }
@@ -465,13 +463,11 @@ export const transitionStatus = async (
   emitToRequest(requestId, 'request:statusChanged', { requestId, status: toStatus })
   emitToRole('ADMIN', 'request:statusChanged', { requestId, status: toStatus })
 
-  try {
-    await sendMail(
-      request.requester.email,
-      `Request Status Updated – ${request.referenceNo}`,
-      emailTemplates.statusChanged(request.referenceNo, toStatus)
-    )
-  } catch {}
+  sendMail(
+    request.requester.email,
+    `Request Status Updated – ${request.referenceNo}`,
+    emailTemplates.statusChanged(request.referenceNo, toStatus)
+  ).catch(() => {})
 
   return updated
 }
