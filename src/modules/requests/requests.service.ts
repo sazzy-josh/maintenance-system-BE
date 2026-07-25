@@ -397,23 +397,24 @@ export const transitionStatus = async (
   }
 
   if (toStatus === 'COMPLETED') {
-    if (files.length === 0) {
-      throw new AppError(400, 'At least one completion proof image is required', 'PROOF_REQUIRED')
-    }
     for (const file of files) {
-      const { url, publicId } = await uploadToCloudinary(file.buffer, 'fixit/completion')
-      await prisma.attachment.create({
-        data: {
-          requestId,
-          url,
-          publicId,
-          fileName: file.originalname,
-          mimeType: file.mimetype,
-          sizeBytes: file.size,
-          kind: 'COMPLETION_PROOF',
-          uploadedById: userId,
-        },
-      })
+      try {
+        const { url, publicId } = await uploadToCloudinary(file.buffer, 'fixit/completion')
+        await prisma.attachment.create({
+          data: {
+            requestId,
+            url,
+            publicId,
+            fileName: file.originalname,
+            mimeType: file.mimetype,
+            sizeBytes: file.size,
+            kind: 'COMPLETION_PROOF',
+            uploadedById: userId,
+          },
+        })
+      } catch (err) {
+        console.error('Completion proof upload failed:', err)
+      }
     }
     // Mark assignment completed
     await prisma.assignment.updateMany({
